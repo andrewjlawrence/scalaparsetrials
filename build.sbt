@@ -1,3 +1,4 @@
+scalaVersion := "2.11.7"
 
 name := "Integter Literal Parser"
 
