@@ -1,11 +1,7 @@
 package scalaparsetrial
 import fastparse.all._
+import fastparse.parsers.Intrinsics
 
-
-class LiteralsImpl() extends Literals
-{
-
-}
 
 abstract class Tree	
 {
@@ -21,13 +17,22 @@ case class Literal(value: String) extends Tree
 	}
 }
 
-object ScalaParseTrial {
+object ScalaParseTrial extends Literals {
+  
+	override def Block(): P0 = {
+		null
+	}
+
+	override def Pattern(): P0 = {
+		null
+	}
+
 	def parseDigit(string: String): Unit = {
-		val parser = P(LiteralsImpl.Pattern.Int.map(Literal))
+		val parser = P(Literals.Int.!.map(Literal))
 		val result = parser.parse(string)
 		result match {
 			case Parsed.Success(value, successIndex) =>
-				println("Parsed digit 1 with value: " + value.printValue() + " and success index " + successIndex)
+				println("Parsed a digit with value: " + value.value + " and success index " + successIndex)
 			case Parsed.Failure(p,i,e) =>
 				println("Parsing failed")
 		}   
