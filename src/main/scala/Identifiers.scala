@@ -12,10 +12,10 @@ object Identifiers{
   val VarId = VarId0(true)
 
   def VarId0(dollar: Boolean) = P( !Keywords ~ Lower ~ IdRest(dollar) )
-  val PlainId = P( !Keywords ~ Upper ~ IdRest(true) | VarId | Operator ~ (!OpChar | &("/*" | "//")) )
-  val PlainIdNoDollar = P( !Keywords ~ Upper ~ IdRest(false) | VarId0(false) | Operator )
-  val BacktickId = P( "`" ~ CharsWhile(_ != '`') ~ "`" )
-  val Id: P0 = P( BacktickId | PlainId )
+  val PlainId = P( !Keywords ~ Index ~ (Upper ~ IdRest(true) | VarId | Operator ~ (!OpChar | &("/*" | "//"))).! ~ Index).map((x : Tuple3[Int,String,Int]) => TermName(x._2.toCharArray(), x._1, x._3)).map(Ident)
+  val PlainIdNoDollar = P( !Keywords ~ Index ~ (Upper ~ IdRest(false) | VarId0(false) | Operator).! ~ Index).map((x : Tuple3[Int,String,Int]) => TermName(x._2.toCharArray(), x._1, x._3)).map(Ident)
+  val BacktickId = P( "`" ~ Index ~ CharsWhile(_ != '`').! ~ Index ~ "`" ).map((x : Tuple3[Int,String,Int]) => TermName(x._2.toCharArray(), x._1, x._3)).map(BackquotedIdent)
+  val Id = P( BacktickId | PlainId )
 
   def IdRest(allowDollar: Boolean) = {
     val NonLetterDigitId = if(!allowDollar) "" else "$"
