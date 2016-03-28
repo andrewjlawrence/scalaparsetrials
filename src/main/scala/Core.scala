@@ -72,7 +72,7 @@ trait Core extends Literals{
    * helper printing function
    */
 
-  val Id = P( WL ~ Identifiers.Id )
+  val Id: P[AST.Tree] = P( WL ~ Identifiers.Id )
   val VarId = P( WL ~ Identifiers.VarId )
   val ExprLiteral = P( WL ~ Literals.Expr.Literal )
   val PatLiteral = P( WL ~ Literals.Pat.Literal )
@@ -86,18 +86,25 @@ trait Core extends Literals{
    */
   val PostDotCheck: P0 = P( WL ~ !(`super` | `this` | "{" | `_` | `type`) )
   val StableId  = {
-    val ClassQualifier: P[Tuple3[_,AST.Ident,_]] = P( "[" ~ Id ~ "]" )
-    val ThisSuper(name: AST.TypeName) = P( (`this`).map(Unit => AST.This(name)) |
-                                       (`super` ~ ClassQualifier.?).map((opid : Option[Tuple3[String ,AST.Ident,String]]) => (_,opid,_) match {
-				       		  		          case Some(id) => id.name
-									  case None => AST.tpne.EMPTY
-                                                                      }).map(
-							              (mixname: AST.TypeName) => AST.Super(AST.This(name),mixname))
-									    )
-    def ThisPathSelector(t : Tree) = P(("." ~ PostDotCheck ~/ Id).rep.map((idlist : List[AST.Ident]) => idlist.foldLeft(t)((t2: Tree, id : Ident) => Select(t2, id.name))))
-    def ThisPath(name: TypeName) = P(ThisSuper(name).flatmap(ThisPathSelector))
-    def IdPathAux(name: TypeName) = P(("." ~ PostDotCheck ~/ (`this` | Id)).rep ~ ("." ~ ThisPath(name)).? )
-    val IdPath= P( Id.map(toTypeName).flatmap(IdPathAux))
-    P( ThisPath(tpnme.EMPTY) | IdPath )
+    val ClassQualifier: P[AST.Tree] = P( "[" ~ Id ~ "]" )
+    def ThisSuper(name: AST.TypeName): P[AST.Tree] = P( (`this`).map(Unit => AST.This(name)) |
+                                       (`super` ~ ClassQualifier.?).map((opid : Option[AST.Tree]) => opid match {
+				       		  		          case Some(id) => id match {
+                                       case AST.Ident(name) => name.toTypeName()
+                                       case AST.BackquotedIdent(name) => name.toTypeName()
+                                  }
+									                case None => AST.tpne.EMPTY
+                              }).map((mixname: AST.TypeName) => AST.Super(AST.This(name),mixname)))
+    def ThisPathSelector(t : AST.Tree) = P(("." ~ PostDotCheck ~/ Id).rep.map((idlist : Seq[AST.Tree]) => idlist.foldLeft(t)((t2: AST.Tree, id : AST.Tree) => id match {
+        case AST.Ident(name) => AST.Select(t2, name.toTypeName())
+        case AST.BackquotedIdent(name) => AST.Select(t2, name.toTypeName())
+      } )))
+    def ThisPath(name: AST.TypeName) = P(ThisSuper(name).flatMap(ThisPathSelector))
+    def IdPathAux(name: AST.TypeName) = P(("." ~ PostDotCheck ~/ (`this` | Id)).rep ~ ("." ~ ThisPath(name)).? )
+    val IdPath= P( Id.map( (id : AST.Tree) => id match {
+       case AST.Ident(name) => name.toTypeName()
+       case AST.BackquotedIdent(name) => name.toTypeName()
+      }).flatMap(IdPathAux))
+    P( ThisPath(AST.tpne.EMPTY) | IdPath )
   }
 }

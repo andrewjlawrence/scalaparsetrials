@@ -18,14 +18,14 @@ abstract class Name
 	}	
 }
 
-case class TermName(name: Array[Char], start: Int, length: Int)
+case class TermName(name: Array[Char], start: Int, length: Int) extends Name
 {
 	def toTypeName(): TypeName = {
 	    TypeName(name, start, length)
 	}
 }
 
-case class TypeName(name: Array[Char], start: Int, length: Int)
+case class TypeName(name: Array[Char], start: Int, length: Int) extends Name
 {
    def toTermName(): TermName = {
        TermName(name, start, length)
