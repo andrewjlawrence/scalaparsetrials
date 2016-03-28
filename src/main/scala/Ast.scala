@@ -5,7 +5,8 @@ import fastparse.parsers.Intrinsics
 /*
  *
  */
-
+object AST
+{
 case class Constant(value: Any)
 
 /*
@@ -14,7 +15,7 @@ case class Constant(value: Any)
 abstract class Name
 {
 	def printName(): Unit = {
-	}
+	}	
 }
 
 case class TermName(name: Array[Char], start: Int, length: Int)
@@ -31,13 +32,19 @@ case class TypeName(name: Array[Char], start: Int, length: Int)
    }
 }
 
+object tpne
+{
+    def EMPTY(): TypeName = {
+      TypeName(null, 0 , 0)
+  }
+}
+
 /*
  * Abstract syntax tree classes.
  */
 abstract class Tree	
 {
 	def printValue(): Unit = {
-
 	}
 }
 
@@ -47,6 +54,8 @@ case class Literal(constant: Constant) extends Tree
 		println("Literal")
 	}
 }
+
+case class SymbolLit(string: String) extends Tree
 
 case class Ident(name: TermName) extends Tree
 {
@@ -69,3 +78,5 @@ case class This(name: TypeName) extends Tree
 case class Super(tree: Tree, mixin: TypeName) extends Tree
 
 case class Select(tree: Tree, name : Name) extends Tree
+
+} // End object AST

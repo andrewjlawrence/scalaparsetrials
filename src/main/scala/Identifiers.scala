@@ -12,9 +12,9 @@ object Identifiers{
   val VarId = VarId0(true)
 
   def VarId0(dollar: Boolean) = P( !Keywords ~ Lower ~ IdRest(dollar) )
-  val PlainId = P( !Keywords ~ Index ~ (Upper ~ IdRest(true) | VarId | Operator ~ (!OpChar | &("/*" | "//"))).! ~ Index).map((x : Tuple3[Int,String,Int]) => TermName(x._2.toCharArray(), x._1, x._3)).map(Ident)
-  val PlainIdNoDollar = P( !Keywords ~ Index ~ (Upper ~ IdRest(false) | VarId0(false) | Operator).! ~ Index).map((x : Tuple3[Int,String,Int]) => TermName(x._2.toCharArray(), x._1, x._3)).map(Ident)
-  val BacktickId = P( "`" ~ Index ~ CharsWhile(_ != '`').! ~ Index ~ "`" ).map((x : Tuple3[Int,String,Int]) => TermName(x._2.toCharArray(), x._1, x._3)).map(BackquotedIdent)
+  val PlainId = P( !Keywords ~ Index ~ (Upper ~ IdRest(true) | VarId | Operator ~ (!OpChar | &("/*" | "//"))).! ~ Index).map((x : Tuple3[Int,String,Int]) => AST.TermName(x._2.toCharArray(), x._1, x._3)).map(AST.Ident)
+  val PlainIdNoDollar = P( !Keywords ~ Index ~ (Upper ~ IdRest(false) | VarId0(false) | Operator).! ~ Index).map((x : Tuple3[Int,String,Int]) => AST.TermName(x._2.toCharArray(), x._1, x._3)).map(AST.Ident)
+  val BacktickId = P( "`" ~ Index ~ CharsWhile(_ != '`').! ~ Index ~ "`" ).map((x : Tuple3[Int,String,Int]) => AST.TermName(x._2.toCharArray(), x._1, x._3)).map(AST.BackquotedIdent)
   val Id = P( BacktickId | PlainId )
 
   def IdRest(allowDollar: Boolean) = {
