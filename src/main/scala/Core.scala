@@ -85,7 +85,7 @@ trait Core extends Literals{
    * apart from these and IDs, everything else is illegal
    */
   val PostDotCheck: P0 = P( WL ~ !(`super` | `this` | "{" | `_` | `type`) )
-  val StableId  = {
+  val StableId: P[AST.Tree]  = {
     val ClassQualifier: P[AST.Tree] = P( "[" ~ Id ~ "]" )
     def ThisSuper(name: AST.TypeName): P[AST.Tree] = P( (`this`).map(Unit => AST.This(name)) |
                                        (`super` ~ ClassQualifier.?).map((opid : Option[AST.Tree]) => opid match {
@@ -99,12 +99,12 @@ trait Core extends Literals{
         case AST.Ident(name) => AST.Select(t2, name.toTypeName())
         case AST.BackquotedIdent(name) => AST.Select(t2, name.toTypeName())
       } )))
-    def ThisPath(name: AST.TypeName) = P(ThisSuper(name).flatMap(ThisPathSelector))
-    def IdPathAux(name: AST.TypeName) = P(("." ~ PostDotCheck ~/ (`this` | Id)).rep ~ ("." ~ ThisPath(name)).? )
-    val IdPath= P( Id.map( (id : AST.Tree) => id match {
+    def ThisPath(name: AST.TypeName): P[AST.Tree] = P(ThisSuper(name).flatMap(ThisPathSelector))
+    def IdPathAux(name: AST.TypeName): P[Option[AST.Tree]] = P(("." ~ PostDotCheck ~/ (`this` | Id)).rep ~ ("." ~ ThisPath(name)).? ).map((x : Tuple2[Seq[Any],Option[AST.Tree]]) => x._2)
+    val IdPath: P[AST.Tree] = P( Id.map( (id : AST.Tree) => id match {
        case AST.Ident(name) => name.toTypeName()
        case AST.BackquotedIdent(name) => name.toTypeName()
-      }).flatMap(IdPathAux))
+      }).flatMap(IdPathAux).map((x : Option[Tree])))
     P( ThisPath(AST.tpne.EMPTY) | IdPath )
   }
 }
